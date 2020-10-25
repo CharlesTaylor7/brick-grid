@@ -19,7 +19,7 @@ drawUI =
   where
     gridStyle = GridStyle
       { borderStyle = unicodeRounded
-      , cellWidth = 2
+      , cellWidth = 4
       , gridWidth =  100
       , gridHeight = 55
       , drawTileWith = show . uncurry (*)

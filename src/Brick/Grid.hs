@@ -9,7 +9,7 @@ import Data.Traversable (for)
 import Data.List (intercalate, intersperse)
 import Control.Monad.Reader (ask)
 
-import Lens.Micro (Lens', (&), to)
+import Lens.Micro (Lens', (&), (<&>), to)
 import Lens.Micro.Mtl (view)
 
 import Brick (Widget, str, vBox, hBox, txt, textWidth)
@@ -33,16 +33,20 @@ suffixLenses ''BorderStyle
 
 drawGrid :: GridStyle -> Widget name
 drawGrid = do
-  width <- view gridWidthL
+  width  <- view gridWidthL
   height <- view gridHeightL
+  let
+    rowIndices    = [0 .. width - 1]
+    columnIndices = [0 .. height - 1]
+
   drawTile <- ask drawTileToFit
   rows <-
-    for [1..height] $ \y -> do
-      row <- for [1..width] $ \x -> do
-        pure $ str $ drawTile (x, y)
-      insertVBorders row
+    for columnIndices $ \y ->
+      insertVBorders $
+        rowIndices <&> (\x -> str $ drawTile (x, y))
 
   insertHBorders rows
+
 
 drawTileToFit :: GridStyle -> (Int, Int) -> TileContents
 drawTileToFit = do
