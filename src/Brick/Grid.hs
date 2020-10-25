@@ -95,11 +95,11 @@ hBorder v = do
   startCorner <- view $ borderStyleL . borderStyleLens v Start
   endCorner <- view $ borderStyleL . borderStyleLens v End
   pipe <- view $ borderStyleL . bsHorizontalL
-  replicate cellWidth pipe
+  T.replicate cellWidth (T.singleton pipe)
       & replicate mapWidth
-      & intercalate [innerBorder]
-      & \row -> [startCorner] <> row <> [endCorner]
-      & str
+      & T.intercalate (T.singleton innerBorder)
+      & \row -> T.cons startCorner (T.snoc row endCorner)
+      & txt
       & pure
 
 data VLocation = Bottom | Middle | Top
