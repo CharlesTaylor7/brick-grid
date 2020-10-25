@@ -1,6 +1,0 @@
-source-repository-package
-  type: git
-  location: git://github.com/CharlesTaylor7/lz-string
-  tag: c451e7032426efac7200be90e79e650558e319a9
-
-packages: ./generals.cabal
