@@ -24,6 +24,8 @@ import Brick.Widgets.Center
 import qualified Graphics.Vty as V
 
 
+type Tile = (Int, Int)
+
 data GridStyle = GridStyle
   { borderStyle :: BorderStyle
   , cellSize :: Int
@@ -45,10 +47,8 @@ drawGrid = do
         pure $ str $ drawTile (x, y)
       insertVBorders row
 
-  gridContent <- insertHBorders rows
-  pure gridContent
+  insertHBorders rows
 
-type Tile = (Int, Int)
 
 insertVBorders :: [Widget name] -> GridStyle -> Widget name
 insertVBorders cells = do
