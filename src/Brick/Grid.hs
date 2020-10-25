@@ -9,28 +9,33 @@ module Brick.Grid
 
 import GHC.Generics (Generic)
 import Data.Traversable (for)
-import Data.List (intersperse)
+import Data.List (intersperse, intercalate)
 
 import Control.Monad.Reader (ask)
 
 import Data.Text (Text)
 import qualified Data.Text as T
 
-import Lens.Micro (Lens', (&), (<&>))
+import Lens.Micro (Lens', (&), (<&>), to)
 import Lens.Micro.Mtl (view)
 
-import Brick (Widget, vBox, txt, textWidth)
+import Brick (Widget, hBox, vBox, txt, textWidth)
 import Brick.Widgets.Border.Style (BorderStyle)
 
 import Brick.Grid.TH (suffixLenses)
 
 
-data GridStyle = GridStyle
+data GridStyle name = GridStyle
   { borderStyle :: BorderStyle
-  , cellWidth :: Int
+  -- ^ Borderstyle to use. Brick.Widgets.Border.Style exports unicode, unicodeRounded, unicodeBolded, & ascii out of the box. Other border styles can be created or modified with the BorderStyle constructor.
   , gridWidth :: Int
+  -- ^ number of cells in each row
   , gridHeight :: Int
-  , drawTileWith :: (Int, Int) -> Text
+  -- ^ number of cells in each column
+  , cellWidth :: Int
+  -- ^ text width of each cell
+  , drawTileWidget :: (Int, Int) -> Widget name
+  -- ^. tile drawing function. It is up to you to ensure all tile widgets rendered width and is the same as the chosen cellWidth.
   }
   deriving (Generic)
 
@@ -39,7 +44,7 @@ suffixLenses ''GridStyle
 suffixLenses ''BorderStyle
 
 
-drawGrid :: GridStyle -> Widget name
+drawGrid :: GridStyle name -> Widget name
 drawGrid = do
   width  <- view gridWidthL
   height <- view gridHeightL
@@ -47,7 +52,7 @@ drawGrid = do
     rowIndices    = [0 .. width - 1]
     columnIndices = [0 .. height - 1]
 
-  drawTile <- ask drawTileToFit
+  drawTile <- view drawTileWidgetL
   rows <-
     for columnIndices $ \y ->
       insertVBorders $
@@ -55,36 +60,12 @@ drawGrid = do
 
   insertHBorders rows
 
-
-drawTileToFit :: GridStyle -> (Int, Int) -> Text
-drawTileToFit = do
-  cellWidth <- view cellWidthL
-  drawTile <- view drawTileWithL
-  let
-    fitToCell result =
-      case textWidth result of
-        n
-          -- exact fit
-          | n == cellWidth -> result
-          -- truncate to fit
-          | n > cellWidth ->  T.take cellWidth result
-          -- pad
-          | otherwise ->
-            let
-              padding = cellWidth - n
-            in
-              T.replicate padding " " <> result
-
-  pure $ fitToCell . drawTile
-
-
-insertVBorders :: [Text] -> GridStyle -> Widget name
+insertVBorders :: [Widget name] -> GridStyle name -> Widget name
 insertVBorders cells = do
-  v <- view $ borderStyleL . bsVerticalL
-  let intersperse = T.intercalate $ T.singleton v
-  pure . txt . (T.cons v) . (`T.snoc` v) . intersperse $ cells
+  v <- view $ borderStyleL . bsVerticalL . to (txt . T.singleton)
+  pure . hBox . (v :) . (<> [v]) . intersperse v $ cells
 
-insertHBorders :: [Widget name] -> GridStyle -> Widget name
+insertHBorders :: [Widget name] -> GridStyle name -> Widget name
 insertHBorders cells = do
   h1 <- hBorder Top
   h2 <- hBorder Bottom
@@ -92,7 +73,7 @@ insertHBorders cells = do
   pure . vBox . (h1 :) . (<> [h2]) . intersperse h3 $ cells
 
 
-hBorder :: VLocation -> GridStyle -> Widget name
+hBorder :: VLocation -> GridStyle name -> Widget name
 hBorder v = do
   cellWidth <- view cellWidthL
   mapWidth <- view gridWidthL

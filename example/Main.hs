@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 import Brick hiding (Widget)
 import qualified Brick as Scroll (ViewportType(..))
 import qualified Brick as Brick
@@ -7,6 +8,7 @@ import Brick.Grid
 
 import qualified Graphics.Vty as V
 
+import Data.Text (Text)
 import qualified Data.Text as T
 
 
@@ -19,13 +21,22 @@ drawUI =
   cached GridView $
   drawGrid gridStyle
   where
+    cellWidth = 4
     gridStyle = GridStyle
       { borderStyle = unicodeRounded
-      , cellWidth = 4
+      , cellWidth = cellWidth
       , gridWidth =  100
       , gridHeight = 55
-      , drawTileWith = T.pack . show . uncurry (*)
+      , drawTileWidget = txt . padOrTruncate cellWidth . T.pack . show . uncurry (*)
       }
+
+padOrTruncate :: Int -> Text -> Text
+padOrTruncate n t =
+  case n - T.length t of
+    0 -> t
+    p | p > 0     -> T.replicate p " " <> t
+      | otherwise -> T.take n t
+
 
 -- | Ticks mark passing of time
 -- the app's custom event type
