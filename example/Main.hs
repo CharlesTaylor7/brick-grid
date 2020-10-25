@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TupleSections #-}
 import Brick hiding (Widget)
 import qualified Brick as Scroll (ViewportType(..))
 import qualified Brick as Brick
@@ -26,7 +27,7 @@ drawUI =
       , cellWidth = cellWidth
       , gridWidth =  100
       , gridHeight = 55
-      , drawTileWidget = toTileWidget cellWidth "tile" . T.pack . show . uncurry (*)
+      , toTile = (, "tile") . T.pack . show . uncurry (*)
       }
 
 -- | Ticks mark passing of time

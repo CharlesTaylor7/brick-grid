@@ -11,14 +11,14 @@ module Brick.Grid
 
 import GHC.Generics (Generic)
 import Data.Traversable (for)
-import Data.List (intersperse, intercalate)
+import Data.List (intersperse)
 
 import Control.Monad.Reader (ask)
 
 import Data.Text (Text)
 import qualified Data.Text as T
 
-import Lens.Micro (Lens', (&), (<&>), to)
+import Lens.Micro (Lens', (&), (<&>), to, (^.))
 import Lens.Micro.Mtl (view)
 
 import Brick (Widget, AttrName, withAttr, hBox, vBox, txt)
@@ -26,19 +26,6 @@ import Brick.Widgets.Border.Style (BorderStyle)
 
 import Brick.Grid.TH (suffixLenses)
 
-
-padOrTruncate :: Int -> Text -> Text
-padOrTruncate n t =
-  case n - T.length t of
-    0 -> t
-    p | p > 0     -> T.replicate p " " <> t
-      | otherwise -> T.take n t
-
-
-toTileWidget :: Int -> AttrName -> Text -> Widget name
-toTileWidget cellWidth attrName text =
-  withAttr attrName $
-  txt $ padOrTruncate cellWidth text
 
 data GridStyle name = GridStyle
   { borderStyle :: BorderStyle
@@ -49,15 +36,36 @@ data GridStyle name = GridStyle
   -- ^ number of cells in each column
   , cellWidth :: Int
   -- ^ text width of each cell
-  , drawTileWidget :: (Int, Int) -> Widget name
-  -- ^. tile drawing function. It is up to you to ensure all tile widgets rendered width and is the same as the chosen cellWidth.
+  , toTile :: (Int, Int) -> (Text, AttrName)
+  -- ^. tile drawing function. text will automatically be padded or truncated to the GridStyle's cellWidth
   }
   deriving (Generic)
-
 
 suffixLenses ''GridStyle
 suffixLenses ''BorderStyle
 
+padOrTruncate :: Int -> Text -> Text
+padOrTruncate n t =
+  case n - T.length t of
+    0 -> t
+    p | p > 0     -> T.replicate p " " <> t
+      | otherwise -> T.take n t
+
+
+toTileWidget :: GridStyle name -> (Text, AttrName) -> Widget name
+toTileWidget gridStyle (text, attrName) =
+  let
+    cellWidth = gridStyle ^. cellWidthL
+  in
+    withAttr attrName $ txt $
+      padOrTruncate cellWidth text
+
+
+drawTile :: GridStyle name -> (Int, Int) -> Widget name
+drawTile = do
+  toTile <- view toTileL
+  toWidget <- ask toTileWidget
+  pure $ toWidget . toTile
 
 drawGrid :: GridStyle name -> Widget name
 drawGrid = do
@@ -67,11 +75,11 @@ drawGrid = do
     rowIndices    = [0 .. width - 1]
     columnIndices = [0 .. height - 1]
 
-  drawTile <- view drawTileWidgetL
+  drawTileF <- ask drawTile
   rows <-
     for columnIndices $ \y ->
       insertVBorders $
-        rowIndices <&> (\x -> drawTile (x, y))
+        rowIndices <&> (\x -> drawTileF (x, y))
 
   insertHBorders rows
 
