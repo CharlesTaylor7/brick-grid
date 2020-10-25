@@ -4,7 +4,6 @@ Extensible grid widget for the Terminal UI library `brick`. Incurs no additional
 # Demo
 Clone the repo, then run the example with `cabal run example`.
 
-# ToDO
-- Use text instead of string
-- truncate & center text in grid cell
-- measure text length with textLength
+# To Do
+- benchmark
+- handle multiline cell contents
