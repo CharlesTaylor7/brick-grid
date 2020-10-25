@@ -7,30 +7,28 @@ module Brick.Grid
   ) where
 
 import Data.Traversable (for)
-import Data.List (intercalate, intersperse)
+import Data.List (intersperse)
 
 import Control.Monad.Reader (ask)
 
 import Data.Text (Text)
 import qualified Data.Text as T
 
-import Lens.Micro (Lens', (&), (<&>), to)
+import Lens.Micro (Lens', (&), (<&>))
 import Lens.Micro.Mtl (view)
 
-import Brick (Widget, vBox, hBox, txt, textWidth, str)
+import Brick (Widget, vBox, txt, textWidth)
 import Brick.Widgets.Border.Style (BorderStyle)
 
 import Brick.Grid.TH (suffixLenses)
 
-
-type TileContents = Text
 
 data GridStyle = GridStyle
   { borderStyle :: BorderStyle
   , cellWidth :: Int
   , gridWidth :: Int
   , gridHeight :: Int
-  , drawTileWith :: (Int, Int) -> TileContents
+  , drawTileWith :: (Int, Int) -> Text
   }
 
 suffixLenses ''GridStyle
@@ -54,7 +52,7 @@ drawGrid = do
   insertHBorders rows
 
 
-drawTileToFit :: GridStyle -> (Int, Int) -> TileContents
+drawTileToFit :: GridStyle -> (Int, Int) -> Text
 drawTileToFit = do
   cellWidth <- view cellWidthL
   drawTile <- view drawTileWithL
@@ -67,13 +65,16 @@ drawTileToFit = do
           -- truncate to fit
           | n > cellWidth ->  T.take cellWidth result
           -- pad
-          -- TODO: center
-          | otherwise -> T.replicate (cellWidth - n) " " <> result
+          | otherwise ->
+            let
+              padding = cellWidth - n
+            in
+              T.replicate padding " " <> result
 
   pure $ fitToCell . drawTile
 
 
-insertVBorders :: [TileContents] -> GridStyle -> Widget name
+insertVBorders :: [Text] -> GridStyle -> Widget name
 insertVBorders cells = do
   v <- view $ borderStyleL . bsVerticalL
   let intersperse = T.intercalate $ T.singleton v
