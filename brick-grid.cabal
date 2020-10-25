@@ -17,28 +17,29 @@ common common
     -Wno-name-shadowing
     -Werror=missing-home-modules
     -O0 -j2 +RTS -A128m -n2m -qg -RTS
-
+  build-depends:
+    base >= 4.0 && < 4.14
 
 library
   import: common
   hs-source-dirs: src
   build-depends:
-      base >= 4.13 && < 5.0
-    , brick
-    , vty
+      brick
     , microlens
     , microlens-mtl
-    , generic-lens
+    , microlens-th
+    , template-haskell
   exposed-modules:
     Brick.Grid
+  other-modules:
+    Brick.Grid.TH
 
 executable example
   import: common
   hs-source-dirs: example
   main-is: Main.hs
   build-depends:
-      base >= 4.13 && < 5.0
-    , brick
+      brick
     , brick-grid
     , vty
   ghc-options: -threaded -rtsopts -with-rtsopts=-N

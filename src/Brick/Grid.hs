@@ -1,24 +1,20 @@
-{-# LANGUAGE OverloadedLabels #-}
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE TemplateHaskell #-}
 module Brick.Grid
-  ( Tile
-  , GridStyle(..)
+  ( GridStyle(..)
   , drawGrid
-  )
-  where
+  ) where
 
-import GHC.Generics (Generic)
 import Data.Traversable (for)
 import Data.List (intercalate, intersperse)
 
 import Lens.Micro (Lens', (&), to)
 import Lens.Micro.Mtl (view)
-import Data.Generics.Labels ()
 
 import Brick (Widget, str, vBox, hBox)
 import Brick.Widgets.Border.Style (BorderStyle)
 
+import Brick.Grid.TH (suffixLenses)
 
 type Tile = (Int, Int)
 
@@ -29,14 +25,15 @@ data GridStyle = GridStyle
   , gridHeight :: Int
   , drawTile :: Tile -> String
   }
-  deriving (Generic)
 
+suffixLenses ''GridStyle
+suffixLenses ''BorderStyle
 
 drawGrid :: GridStyle -> Widget name
 drawGrid = do
-  width <- view #gridWidth
-  height <- view #gridHeight
-  drawTile <- view #drawTile
+  width <- view gridWidthL
+  height <- view gridHeightL
+  drawTile <- view drawTileL
   rows <-
     for [1..height] $ \y -> do
       row <- for [1..width] $ \x -> do
@@ -48,7 +45,7 @@ drawGrid = do
 
 insertVBorders :: [Widget name] -> GridStyle -> Widget name
 insertVBorders cells = do
-  v <- view $ #borderStyle . #bsVertical . to (str . pure)
+  v <- view $ borderStyleL . bsVerticalL . to (str . pure)
   pure . hBox . (v:) . (<> [v]) . intersperse v $ cells
 
 insertHBorders :: [Widget name] -> GridStyle -> Widget name
@@ -61,12 +58,12 @@ insertHBorders cells = do
 
 hBorder :: VLocation -> GridStyle -> Widget name
 hBorder v = do
-  cellWidth <- view #cellSize
-  mapWidth <- view #gridWidth
-  innerBorder <- view $ #borderStyle . borderStyleL v Center
-  startCorner <- view $ #borderStyle . borderStyleL v Start
-  endCorner <- view $ #borderStyle . borderStyleL v End
-  pipe <- view $ #borderStyle . #bsHorizontal
+  cellWidth <- view cellSizeL
+  mapWidth <- view gridWidthL
+  innerBorder <- view $ borderStyleL . borderStyleLens v Center
+  startCorner <- view $ borderStyleL . borderStyleLens v Start
+  endCorner <- view $ borderStyleL . borderStyleLens v End
+  pipe <- view $ borderStyleL . bsHorizontalL
   replicate cellWidth pipe
       & replicate mapWidth
       & intercalate [innerBorder]
@@ -77,13 +74,13 @@ hBorder v = do
 data VLocation = Bottom | Middle | Top
 data HLocation = Start | Center | End
 
-borderStyleL :: VLocation -> HLocation -> Lens' BorderStyle Char
-borderStyleL Bottom Start  = #bsCornerBL
-borderStyleL Bottom Center = #bsIntersectB
-borderStyleL Bottom End    = #bsCornerBR
-borderStyleL Middle Start  = #bsIntersectL
-borderStyleL Middle Center = #bsIntersectFull
-borderStyleL Middle End    = #bsIntersectR
-borderStyleL Top Start     = #bsCornerTL
-borderStyleL Top Center    = #bsIntersectT
-borderStyleL Top End       = #bsCornerTR
+borderStyleLens :: VLocation -> HLocation -> Lens' BorderStyle Char
+borderStyleLens Bottom Start  = bsCornerBLL
+borderStyleLens Bottom Center = bsIntersectBL
+borderStyleLens Bottom End    = bsCornerBRL
+borderStyleLens Middle Start  = bsIntersectLL
+borderStyleLens Middle Center = bsIntersectFullL
+borderStyleLens Middle End    = bsIntersectRL
+borderStyleLens Top Start     = bsCornerTLL
+borderStyleLens Top Center    = bsIntersectTL
+borderStyleLens Top End       = bsCornerTRL
