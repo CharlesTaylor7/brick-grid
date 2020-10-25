@@ -7,6 +7,8 @@ import Brick.Grid
 
 import qualified Graphics.Vty as V
 
+import qualified Data.Text as T
+
 
 main :: IO ()
 main = defaultMain app ()
@@ -22,7 +24,7 @@ drawUI =
       , cellWidth = 4
       , gridWidth =  100
       , gridHeight = 55
-      , drawTileWith = show . uncurry (*)
+      , drawTileWith = T.pack . show . uncurry (*)
       }
 
 -- | Ticks mark passing of time

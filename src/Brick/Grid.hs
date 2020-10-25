@@ -1,5 +1,6 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE OverloadedStrings #-}
 module Brick.Grid
   ( GridStyle(..)
   , drawGrid
@@ -7,17 +8,22 @@ module Brick.Grid
 
 import Data.Traversable (for)
 import Data.List (intercalate, intersperse)
+
 import Control.Monad.Reader (ask)
+
+import Data.Text (Text)
+import qualified Data.Text as T
 
 import Lens.Micro (Lens', (&), (<&>), to)
 import Lens.Micro.Mtl (view)
 
-import Brick (Widget, str, vBox, hBox, txt, textWidth)
+import Brick (Widget, vBox, hBox, txt, textWidth, str)
 import Brick.Widgets.Border.Style (BorderStyle)
 
 import Brick.Grid.TH (suffixLenses)
 
-type TileContents = String
+
+type TileContents = Text
 
 data GridStyle = GridStyle
   { borderStyle :: BorderStyle
@@ -43,7 +49,7 @@ drawGrid = do
   rows <-
     for columnIndices $ \y ->
       insertVBorders $
-        rowIndices <&> (\x -> str $ drawTile (x, y))
+        rowIndices <&> (\x -> drawTile (x, y))
 
   insertHBorders rows
 
@@ -59,18 +65,19 @@ drawTileToFit = do
           -- exact fit
           | n == cellWidth -> result
           -- truncate to fit
-          | n > cellWidth ->  take cellWidth result
+          | n > cellWidth ->  T.take cellWidth result
           -- pad
           -- TODO: center
-          | otherwise -> replicate (cellWidth - n) ' ' <> result
+          | otherwise -> T.replicate (cellWidth - n) " " <> result
 
   pure $ fitToCell . drawTile
 
 
-insertVBorders :: [Widget name] -> GridStyle -> Widget name
+insertVBorders :: [TileContents] -> GridStyle -> Widget name
 insertVBorders cells = do
-  v <- view $ borderStyleL . bsVerticalL . to (str . pure)
-  pure . hBox . (v:) . (<> [v]) . intersperse v $ cells
+  v <- view $ borderStyleL . bsVerticalL
+  let intersperse = T.intercalate $ T.singleton v
+  pure . txt . (T.cons v) . (`T.snoc` v) . intersperse $ cells
 
 insertHBorders :: [Widget name] -> GridStyle -> Widget name
 insertHBorders cells = do
