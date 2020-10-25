@@ -5,8 +5,6 @@
 module Brick.Grid
   ( GridStyle(..)
   , drawGrid
-  , padOrTruncate
-  , toTileWidget
   ) where
 
 import GHC.Generics (Generic)
