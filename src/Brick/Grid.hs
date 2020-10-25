@@ -1,7 +1,12 @@
 {-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE RankNTypes #-}
-module Brick.Grid where
+module Brick.Grid
+  ( Tile
+  , GridStyle(..)
+  , drawGrid
+  )
+  where
 
 import GHC.Generics hiding (to)
 import Data.Foldable
@@ -17,7 +22,6 @@ import qualified Brick as Scroll (ViewportType(..))
 import qualified Brick as Brick
 
 import Brick.BChan (newBChan, writeBChan)
--- import Brick.Widgets.Border
 import Brick.Widgets.Border.Style
 import Brick.Widgets.Center
 
