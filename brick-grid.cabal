@@ -13,11 +13,10 @@ source-repository head
 common common
   default-language: Haskell2010
   ghc-options:
-      -freverse-errors
-      -ferror-spans
-      -Werror=missing-home-modules
-      -fwarn-incomplete-patterns
-      -O0 -j2 +RTS -A128m -n2m -qg -RTS
+    -Wall
+    -Wno-name-shadowing
+    -Werror=missing-home-modules
+    -O0 -j2 +RTS -A128m -n2m -qg -RTS
 
 
 library

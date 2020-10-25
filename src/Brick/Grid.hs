@@ -8,24 +8,16 @@ module Brick.Grid
   )
   where
 
-import GHC.Generics hiding (to)
-import Data.Foldable
-import Data.Traversable
+import GHC.Generics (Generic)
+import Data.Traversable (for)
 import Data.List (intercalate, intersperse)
 
-import Lens.Micro
-import Lens.Micro.Mtl
-import Data.Generics.Labels
+import Lens.Micro (Lens', (&), to)
+import Lens.Micro.Mtl (view)
+import Data.Generics.Labels ()
 
-import Brick hiding (Horizontal, Vertical, Both)
-import qualified Brick as Scroll (ViewportType(..))
-import qualified Brick as Brick
-
-import Brick.BChan (newBChan, writeBChan)
-import Brick.Widgets.Border.Style
-import Brick.Widgets.Center
-
-import qualified Graphics.Vty as V
+import Brick (Widget, str, vBox, hBox)
+import Brick.Widgets.Border.Style (BorderStyle)
 
 
 type Tile = (Int, Int)
@@ -84,7 +76,6 @@ hBorder v = do
 
 data VLocation = Bottom | Middle | Top
 data HLocation = Start | Center | End
-data Pipe = Horizontal | Vertical
 
 borderStyleL :: VLocation -> HLocation -> Lens' BorderStyle Char
 borderStyleL Bottom Start  = #bsCornerBL
