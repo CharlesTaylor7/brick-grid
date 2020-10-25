@@ -27,11 +27,9 @@ library
       base >= 4.13 && < 5.0
     , brick
     , vty
-    , mtl
     , microlens
     , microlens-mtl
     , generic-lens
-    , containers
   exposed-modules:
     Brick.Grid
 

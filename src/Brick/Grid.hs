@@ -8,7 +8,6 @@ import Data.Foldable
 import Data.Traversable
 import Data.List (intercalate, intersperse)
 
-import Control.Monad.Reader
 import Lens.Micro
 import Lens.Micro.Mtl
 import Data.Generics.Labels
