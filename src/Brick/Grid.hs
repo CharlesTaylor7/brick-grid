@@ -5,6 +5,8 @@
 module Brick.Grid
   ( GridStyle(..)
   , drawGrid
+  , padOrTruncate
+  , toTileWidget
   ) where
 
 import GHC.Generics (Generic)
@@ -19,11 +21,24 @@ import qualified Data.Text as T
 import Lens.Micro (Lens', (&), (<&>), to)
 import Lens.Micro.Mtl (view)
 
-import Brick (Widget, hBox, vBox, txt, textWidth)
+import Brick (Widget, AttrName, withAttr, hBox, vBox, txt)
 import Brick.Widgets.Border.Style (BorderStyle)
 
 import Brick.Grid.TH (suffixLenses)
 
+
+padOrTruncate :: Int -> Text -> Text
+padOrTruncate n t =
+  case n - T.length t of
+    0 -> t
+    p | p > 0     -> T.replicate p " " <> t
+      | otherwise -> T.take n t
+
+
+toTileWidget :: Int -> AttrName -> Text -> Widget name
+toTileWidget cellWidth attrName text =
+  withAttr attrName $
+  txt $ padOrTruncate cellWidth text
 
 data GridStyle name = GridStyle
   { borderStyle :: BorderStyle

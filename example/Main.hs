@@ -8,7 +8,6 @@ import Brick.Grid
 
 import qualified Graphics.Vty as V
 
-import Data.Text (Text)
 import qualified Data.Text as T
 
 
@@ -27,16 +26,8 @@ drawUI =
       , cellWidth = cellWidth
       , gridWidth =  100
       , gridHeight = 55
-      , drawTileWidget = txt . padOrTruncate cellWidth . T.pack . show . uncurry (*)
+      , drawTileWidget = toTileWidget cellWidth "tile" . T.pack . show . uncurry (*)
       }
-
-padOrTruncate :: Int -> Text -> Text
-padOrTruncate n t =
-  case n - T.length t of
-    0 -> t
-    p | p > 0     -> T.replicate p " " <> t
-      | otherwise -> T.take n t
-
 
 -- | Ticks mark passing of time
 -- the app's custom event type
