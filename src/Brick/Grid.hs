@@ -1,4 +1,6 @@
-{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE OverloadedLabels #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE RankNTypes #-}
 module Brick.Grid where
 
 import GHC.Generics hiding (to)
@@ -33,7 +35,7 @@ data GridStyle = GridStyle
   deriving (Generic)
 
 
-drawGrid :: MonadReader GridStyle m => m (Widget name)
+drawGrid :: GridStyle -> Widget name
 drawGrid = do
   width <- view #gridWidth
   height <- view #gridHeight
@@ -49,12 +51,12 @@ drawGrid = do
 
 type Tile = (Int, Int)
 
-insertVBorders :: MonadReader GridStyle m => [Widget name] -> m (Widget name)
+insertVBorders :: [Widget name] -> GridStyle -> Widget name
 insertVBorders cells = do
   v <- view $ #borderStyle . #bsVertical . to (str . pure)
   pure . hBox . (v:) . (<> [v]) . intersperse v $ cells
 
-insertHBorders :: MonadReader GridStyle m => [Widget name] -> m (Widget name)
+insertHBorders :: [Widget name] -> GridStyle -> Widget name
 insertHBorders cells = do
   h1 <- hBorder Top
   h2 <- hBorder Bottom
@@ -62,7 +64,7 @@ insertHBorders cells = do
   pure . vBox . (h1 :) . (<> [h2]) . intersperse h3 $ cells
 
 
-hBorder :: MonadReader GridStyle m => VLocation -> m (Widget name)
+hBorder :: VLocation -> GridStyle -> Widget name
 hBorder v = do
   cellWidth <- view #cellSize
   mapWidth <- view #gridWidth

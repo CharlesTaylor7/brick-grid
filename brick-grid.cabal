@@ -19,40 +19,6 @@ common common
       -fwarn-incomplete-patterns
       -O0 -j2 +RTS -A128m -n2m -qg -RTS
 
-  default-extensions:
-    -- required to make type aliases
-      RankNTypes
-    , FlexibleContexts
-    , TypeFamilies
-    , ConstraintKinds
-    -- deriving extensions
-    , StandaloneDeriving
-    , DeriveGeneric
-    , DerivingVia
-    , GeneralizedNewtypeDeriving
-    , DeriveFunctor
-    , DeriveTraversable
-    , EmptyDataDeriving
-    , DeriveAnyClass
-    -- required to effectively document code
-    , ScopedTypeVariables
-    -- awesome debugging by having the compiler tell you the type of something
-    , PartialTypeSignatures
-    -- patterns
-    , PatternSynonyms
-    , ViewPatterns
-    -- nice to have
-    , OverloadedStrings
-    , BangPatterns
-    , TypeApplications
-    , LambdaCase
-    , TupleSections
-    , BlockArguments
-    , NumericUnderscores
-    , NamedFieldPuns
-    -- generic lens
-    , DuplicateRecordFields
-    , OverloadedLabels
 
 library
   import: common
