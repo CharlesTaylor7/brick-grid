@@ -1,13 +1,8 @@
-import Control.Concurrent (forkIO, threadDelay)
-import Control.Monad (forever)
-
-import Brick hiding (Widget, Horizontal, Vertical, Both)
+import Brick hiding (Widget)
 import qualified Brick as Scroll (ViewportType(..))
 import qualified Brick as Brick
 
-import Brick.BChan (newBChan, writeBChan)
 import Brick.Widgets.Border.Style
-import Brick.Widgets.Center
 import Brick.Grid
 
 import qualified Graphics.Vty as V
@@ -27,11 +22,10 @@ drawUI =
       , cellSize = 4
       , gridWidth =  100
       , gridHeight = 55
-      , drawTile = const " hi "
+      , drawTile = show . uncurry (*)
       }
 
 -- | Ticks mark passing of time
---
 -- the app's custom event type
 type Tick = ()
 
@@ -52,6 +46,7 @@ app = App
   , appAttrMap = const $ forceAttrMap mempty
   }
 
+scrollAmount :: Int
 scrollAmount = 3
 
 handleEvent :: BrickEvent Name Tick -> AppState -> EventM Name (Next AppState)
@@ -77,5 +72,3 @@ handleEvent (VtyEvent (V.EvKey key [])) =
 
     _ -> continue
 handleEvent _ = continue
-
-
