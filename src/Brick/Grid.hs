@@ -7,33 +7,35 @@ module Brick.Grid
 
 import Data.Traversable (for)
 import Data.List (intercalate, intersperse)
+import Control.Monad.Reader (ask)
 
 import Lens.Micro (Lens', (&), to)
 import Lens.Micro.Mtl (view)
 
-import Brick (Widget, str, vBox, hBox)
+import Brick (Widget, str, vBox, hBox, txt, textWidth)
 import Brick.Widgets.Border.Style (BorderStyle)
 
 import Brick.Grid.TH (suffixLenses)
 
-type Tile = (Int, Int)
+type TileContents = String
 
 data GridStyle = GridStyle
   { borderStyle :: BorderStyle
-  , cellSize :: Int
+  , cellWidth :: Int
   , gridWidth :: Int
   , gridHeight :: Int
-  , drawTile :: Tile -> String
+  , drawTileWith :: (Int, Int) -> TileContents
   }
 
 suffixLenses ''GridStyle
 suffixLenses ''BorderStyle
 
+
 drawGrid :: GridStyle -> Widget name
 drawGrid = do
   width <- view gridWidthL
   height <- view gridHeightL
-  drawTile <- view drawTileL
+  drawTile <- ask drawTileToFit
   rows <-
     for [1..height] $ \y -> do
       row <- for [1..width] $ \x -> do
@@ -41,6 +43,24 @@ drawGrid = do
       insertVBorders row
 
   insertHBorders rows
+
+drawTileToFit :: GridStyle -> (Int, Int) -> TileContents
+drawTileToFit = do
+  cellWidth <- view cellWidthL
+  drawTile <- view drawTileWithL
+  let
+    fitToCell result =
+      case textWidth result of
+        n
+          -- exact fit
+          | n == cellWidth -> result
+          -- truncate to fit
+          | n > cellWidth ->  take cellWidth result
+          -- pad
+          -- TODO: center
+          | otherwise -> replicate (cellWidth - n) ' ' <> result
+
+  pure $ fitToCell . drawTile
 
 
 insertVBorders :: [Widget name] -> GridStyle -> Widget name
@@ -58,7 +78,7 @@ insertHBorders cells = do
 
 hBorder :: VLocation -> GridStyle -> Widget name
 hBorder v = do
-  cellWidth <- view cellSizeL
+  cellWidth <- view cellWidthL
   mapWidth <- view gridWidthL
   innerBorder <- view $ borderStyleL . borderStyleLens v Center
   startCorner <- view $ borderStyleL . borderStyleLens v Start

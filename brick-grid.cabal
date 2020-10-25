@@ -29,6 +29,7 @@ library
     , microlens-mtl
     , microlens-th
     , template-haskell
+    , mtl
   exposed-modules:
     Brick.Grid
   other-modules:

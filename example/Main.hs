@@ -19,10 +19,10 @@ drawUI =
   where
     gridStyle = GridStyle
       { borderStyle = unicodeRounded
-      , cellSize = 4
+      , cellWidth = 2
       , gridWidth =  100
       , gridHeight = 55
-      , drawTile = show . uncurry (*)
+      , drawTileWith = show . uncurry (*)
       }
 
 -- | Ticks mark passing of time
