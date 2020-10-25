@@ -1,11 +1,13 @@
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE TemplateHaskell #-}
 module Brick.Grid
   ( GridStyle(..)
   , drawGrid
   ) where
 
+import GHC.Generics (Generic)
 import Data.Traversable (for)
 import Data.List (intersperse)
 
@@ -30,6 +32,8 @@ data GridStyle = GridStyle
   , gridHeight :: Int
   , drawTileWith :: (Int, Int) -> Text
   }
+  deriving (Generic)
+
 
 suffixLenses ''GridStyle
 suffixLenses ''BorderStyle
