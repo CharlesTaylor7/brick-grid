@@ -1,5 +1,5 @@
 cabal-version:  2.2
-name:           generals
+name:           brick-grid
 version:        0.0.0.0
 author:         Charles Taylor
 maintainer:     charlestaylor95@gmail.com
@@ -8,7 +8,7 @@ build-type:     Simple
 
 source-repository head
   type: git
-  location: https://github.com/CharlesTaylor7/generals-bot
+  location: https://github.com/CharlesTaylor7/brick-grid
 
 common common
   default-language: Haskell2010
@@ -54,60 +54,14 @@ common common
     , DuplicateRecordFields
     , OverloadedLabels
 
-library generals-prelude
+library
   import: common
   hs-source-dirs:
-      hs/prelude
+    src
   build-depends:
       base >= 4.13 && < 5.0
-    , relude
-    , lens >= 4.19.2 && < 5.0
-    , profunctors
-    , generic-lens
-    , vector
-    , containers
-    , mtl
-    , data-default
-    , these
-    , semialign
-    , generic-monoid
-  exposed-modules:
-      Prelude
-    , Control.Lens.Unsafe
-    , Control.Lens.Safe
-
-library generals-lib
-  import: common
-  hs-source-dirs:
-    hs/lib
-  build-depends:
-      generals-prelude
-    , lz-string
-    , process
-    , text
-    , aeson
-    , vector
-    , groups
-    , primitive
-    , mtl
-    , containers
-  exposed-modules:
-      Node.FFI
-    , Generals.Replay.Decode
-    , Generals.Replay.Simulate
-    , Types
-
-executable generals-brick-ui
-  import: common
-  main-is: Main.hs
-  hs-source-dirs:
-    hs/brick-ui
-  build-depends:
-      generals-prelude
-    , generals-lib
-    , containers
     , brick
     , vty
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
-  other-modules:
-    UI
+    , containers
+  exposed-modules:
+    Brick.Grid

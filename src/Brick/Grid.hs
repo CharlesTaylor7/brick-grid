@@ -1,4 +1,4 @@
-module UI where
+module Brick.Grid where
 
 import Prelude hiding (Empty, on)
 import Types
