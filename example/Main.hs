@@ -19,15 +19,15 @@ drawUI :: Widget
 drawUI =
   viewport GridView Scroll.Both $
   cached GridView $
-  drawGrid gridStyle
+  drawGrid drawTile gridStyle
   where
     cellWidth = 4
+    drawTile = (, "tile") . T.pack . show . uncurry (*)
     gridStyle = GridStyle
       { borderStyle = unicodeRounded
-      , cellWidth = cellWidth
       , gridWidth =  100
       , gridHeight = 55
-      , toTile = (, "tile") . T.pack . show . uncurry (*)
+      , padding = PadLeft
       }
 
 -- | Ticks mark passing of time

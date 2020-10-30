@@ -16,6 +16,8 @@ common common
     -Wall
     -Wno-name-shadowing
     -Werror=missing-home-modules
+    -Werror=missing-fields
+    -Werror=incomplete-patterns
     -O0 -j2 +RTS -A128m -n2m -qg -RTS
   build-depends:
     base >= 4.0 && < 4.14

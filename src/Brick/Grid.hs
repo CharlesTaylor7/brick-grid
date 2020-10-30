@@ -4,6 +4,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Brick.Grid
   ( GridStyle(..)
+  , Padding(..)
   , drawGrid
   ) where
 
@@ -19,11 +20,13 @@ import qualified Data.Text as T
 import Lens.Micro (Lens', (&), (<&>), to, (^.))
 import Lens.Micro.Mtl (view)
 
-import Brick (Widget, AttrName, withAttr, hBox, vBox, txt)
+import Brick (Widget, AttrName, withAttr, hBox, vBox, txt, textWidth)
 import Brick.Widgets.Border.Style (BorderStyle)
 
 import Brick.Grid.TH (suffixLenses)
 
+
+data Padding = PadLeft | PadRight
 
 data GridStyle = GridStyle
   { borderStyle :: BorderStyle
@@ -32,82 +35,85 @@ data GridStyle = GridStyle
   -- ^ number of cells in each row
   , gridHeight :: Int
   -- ^ number of cells in each column
-  , cellWidth :: Int
-  -- ^ text width of each cell
-  , toTile :: (Int, Int) -> (Text, AttrName)
-  -- ^. tile drawing function. text will automatically be padded or truncated to the GridStyle's cellWidth
+  , padding :: Padding
   }
   deriving (Generic)
 
 suffixLenses ''GridStyle
 suffixLenses ''BorderStyle
 
-padOrTruncate :: Int -> Text -> Text
-padOrTruncate n t =
-  case n - T.length t of
-    0 -> t
-    p | p > 0     -> T.replicate p " " <> t
-      | otherwise -> T.take n t
-
-
-toTileWidget :: GridStyle -> (Text, AttrName) -> Widget name
-toTileWidget gridStyle (text, attrName) =
-  let
-    cellWidth = gridStyle ^. cellWidthL
-  in
-    withAttr attrName $ txt $
-      padOrTruncate cellWidth text
-
-
-drawTile :: GridStyle -> (Int, Int) -> Widget name
-drawTile = do
-  toTile <- view toTileL
-  toWidget <- ask toTileWidget
-  pure $ toWidget . toTile
-
-drawGrid :: GridStyle -> Widget name
-drawGrid = do
+drawGrid
+  :: ((Int, Int) -> (Text, AttrName))
+  -- ^ tile drawing function
+  -> GridStyle
+  -- ^ grid style options
+  -> Widget name
+drawGrid drawTileF = do
   width  <- view gridWidthL
   height <- view gridHeightL
+  padding <- view paddingL
   let
-    rowIndices    = [0 .. width - 1]
-    columnIndices = [0 .. height - 1]
+    columnIndices = [0 .. width - 1]
+    rowIndices    = [0 .. height - 1]
 
-  drawTileF <- ask drawTile
+    columnWidth i = rowIndices
+      & map (\j -> textWidth $ fst $ drawTileF (i, j))
+      & maximum
+
+    columnWidths = map columnWidth columnIndices
+
   rows <-
-    for columnIndices $ \y ->
+    for rowIndices $ \j ->
       insertVBorders $
-        rowIndices <&> (\x -> drawTileF (x, y))
+        columnIndices <&>
+          (\i ->
+            let (content, name) = drawTileF (i, j)
+            in content
+              & pad padding (columnWidths !! i)
+              & txt
+              & withAttr name
+          )
 
-  insertHBorders rows
+  insertHBorders columnWidths rows
+
+
+pad :: Padding -> Int -> Text -> Text
+pad p n t =
+  case n - T.length t of
+    d | d > 0 ->
+      case p of
+        PadLeft  -> T.replicate d " " <> t
+        PadRight -> t <> T.replicate d " "
+      | otherwise -> t
+
 
 insertVBorders :: [Widget name] -> GridStyle -> Widget name
 insertVBorders cells = do
   v <- view $ borderStyleL . bsVerticalL . to (txt . T.singleton)
   pure . hBox . (v :) . (<> [v]) . intersperse v $ cells
 
-insertHBorders :: [Widget name] -> GridStyle -> Widget name
-insertHBorders cells = do
+insertHBorders :: [Int] -> [Widget name] -> GridStyle -> Widget name
+insertHBorders columnWidths cells = do
+  hBorder <- pure $ hBorder columnWidths
   h1 <- hBorder Top
   h2 <- hBorder Bottom
   h3 <- hBorder Middle
   pure . vBox . (h1 :) . (<> [h2]) . intersperse h3 $ cells
 
 
-hBorder :: VLocation -> GridStyle -> Widget name
-hBorder v = do
-  cellWidth <- view cellWidthL
-  mapWidth <- view gridWidthL
+hBorder :: [Int] -> VLocation -> GridStyle -> Widget name
+hBorder columnWidths v = do
   innerBorder <- view $ borderStyleL . borderStyleLens v Center
   startCorner <- view $ borderStyleL . borderStyleLens v Start
   endCorner <- view $ borderStyleL . borderStyleLens v End
   pipe <- view $ borderStyleL . bsHorizontalL
-  T.replicate cellWidth (T.singleton pipe)
-      & replicate mapWidth
-      & T.intercalate (T.singleton innerBorder)
-      & \row -> T.cons startCorner (T.snoc row endCorner)
-      & txt
-      & pure
+
+  columnWidths
+    & map (\w -> T.replicate w (T.singleton pipe))
+    & T.intercalate (T.singleton innerBorder)
+    & \row -> T.cons startCorner (T.snoc row endCorner)
+    & txt
+    & pure
 
 data VLocation = Bottom | Middle | Top
 data HLocation = Start | Center | End
